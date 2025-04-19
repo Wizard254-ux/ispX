@@ -51,7 +51,7 @@ services:
       - hotspot_templates:/var/www/templates
       - openvpn_easyrsa:/etc/openvpn/easy-rsa  # Add this
 
-      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa  # Mount host certificates
+      # - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa  # Mount host certificates
 
 
     networks:
