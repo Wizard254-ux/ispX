@@ -21,7 +21,6 @@ services:
       - hotspot_templates:/var/www/templates
     networks:
       - app-network
-    user: "1000:1000"
 
   redis:
     image: redis:7-alpine
@@ -29,13 +28,10 @@ services:
       - "6379:6379"
     networks:
       - app-network
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
 
   celery_worker:
     build: .
-    command: celery -A tasks worker --loglevel=info --uid=1000
+    command: celery -A tasks worker --loglevel=info --uid=0
     environment:
       - FLASK_ENV=production
       - REDIS_URL=redis://redis:6379/0
@@ -52,7 +48,6 @@ services:
       - hotspot_templates:/var/www/templates
     networks:
       - app-network
-    user: "1000:1000"
 
 networks:
   app-network:
@@ -60,5 +55,4 @@ networks:
 
 volumes:
   openvpn_client:
-  hotspot_templates:
-  redis_data: 
+  hotspot_templates: 
