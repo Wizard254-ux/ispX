@@ -5,4 +5,5 @@ redis==4.3.4
 gunicorn==20.1.0
 openvpn-api==0.3.0
 python-dotenv==0.19.0
-prometheus-client==0.11.0 
+prometheus-client==0.11.0
+PyJWT==2.3.0 
