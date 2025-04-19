@@ -5,32 +5,20 @@ from config import Config
 
 
 def generate_openvpn_config(provision_identity, output_path):
-    pki_path = "/etc/openvpn/easy-rsa/pki"
-
-    if not os.path.exists(pki_path):
-        init_cmd = "sudo /etc/openvpn/easy-rsa/easyrsa init-pki"
-        init_result = subprocess.run(init_cmd, shell=True, capture_output=True, text=True)
-
-        if init_result.returncode != 0:
-            raise Exception(f"Failed to initialize PKI: {init_result.stderr}")
-
+    """Generate OpenVPN client configuration file."""
     try:
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Generate client certificate using sudo
-        sudo_cmd = f"sudo /etc/openvpn/easy-rsa/easyrsa build-client-full {provision_identity} nopass"
-        result = subprocess.run(sudo_cmd, shell=True, capture_output=True, text=True)
+        # Change to the EasyRSA directory
+        os.chdir('/etc/openvpn/easy-rsa')
         
-        if result.returncode != 0:
-            raise Exception(f"Failed to generate client certificate: {result.stderr}")
+        # Generate client certificate
+        subprocess.run([
+            './easyrsa', 'build-client-full', provision_identity, 'nopass'
+        ], check=True)
         
-        # Read certificate files using sudo
-        ca_cert = subprocess.check_output("sudo cat /etc/openvpn/easy-rsa/pki/ca.crt", shell=True).decode().strip()
-        client_cert = subprocess.check_output(f"sudo cat /etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt", shell=True).decode().strip()
-        client_key = subprocess.check_output(f"sudo cat /etc/openvpn/easy-rsa/pki/private/{provision_identity}.key", shell=True).decode().strip()
-        
-        # Create client configuration
+        # Create enhanced OpenVPN configuration
         config = f"""client
 dev tun
 proto tcp
@@ -43,26 +31,25 @@ remote-cert-tls server
 auth SHA256
 cipher AES-256-CBC
 data-ciphers AES-256-CBC
-data-ciphers-fallback AES-256-CBC
-verify-x509-name server name
 verb 3
 
 <ca>
-{ca_cert}
+{open('/etc/openvpn/easy-rsa/pki/ca.crt').read().strip()}
 </ca>
+
 <cert>
-{client_cert}
+{open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt').read().strip()}
 </cert>
+
 <key>
-{client_key}
+{open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key').read().strip()}
 </key>
 """
         
         # Write configuration to file
         with open(output_path, 'w') as f:
             f.write(config)
-        
+            
         return True
-
     except Exception as e:
         raise Exception(f"Failed to generate OpenVPN configuration: {str(e)}")
