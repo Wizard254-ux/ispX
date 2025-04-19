@@ -31,7 +31,8 @@ services:
 
   celery_worker:
     build: .
-    command: celery -A tasks worker --loglevel=info --uid=1000
+    command: celery -A tasks worker --loglevel=info
+    user: "1000:1000"
     environment:
       - FLASK_ENV=production
       - REDIS_URL=redis://redis:6379/0
