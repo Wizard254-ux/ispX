@@ -1,6 +1,5 @@
 import os
 import subprocess
-import shutil
 from config import Config
 
 def generate_openvpn_config(provision_identity, output_path):
@@ -9,14 +8,13 @@ def generate_openvpn_config(provision_identity, output_path):
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Instead of changing directory, run shell command directly with more debug info
-        result = subprocess.run([
-            'bash', '-c',
-            'cd /etc/openvpn/easy-rsa && ls -la && whoami && ./easyrsa build-client-full ' + provision_identity + ' nopass'
-        ], capture_output=True, text=True)
+        # Change to the EasyRSA directory
+        os.chdir('/etc/openvpn/easy-rsa')
         
-        if result.returncode != 0:
-            raise Exception(f"EasyRSA command failed: stdout={result.stdout}, stderr={result.stderr}")
+        # Generate client certificate
+        subprocess.run([
+            './easyrsa', 'build-client-full', provision_identity, 'nopass'
+        ], check=True)
         
         # Create OpenVPN configuration
         config = f"""client
