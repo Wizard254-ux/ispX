@@ -16,7 +16,7 @@ def generate_openvpn_config(provision_identity, output_path):
             './easyrsa', 'build-client-full', provision_identity, 'nopass'
         ], check=True)
         
-        # Create OpenVPN configuration
+        # Create simple OpenVPN configuration
         config = f"""client
 dev tun
 proto tcp
@@ -29,13 +29,13 @@ auth SHA1
 cipher AES-256-CBC
 verb 3
 <ca>
-{open('/etc/openvpn/ca.crt').read()}
+{open('/etc/openvpn/ca.crt').read().strip()}
 </ca>
 <cert>
-{open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt').read()}
+{open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt').read().strip()}
 </cert>
 <key>
-{open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key').read()}
+{open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key').read().strip()}
 </key>
 """
         
@@ -45,4 +45,4 @@ verb 3
             
         return True
     except Exception as e:
-        raise Exception(f"Failed to generate OpenVPN configuration: {str(e)}") 
+        raise Exception(f"Failed to generate OpenVPN configuration: {str(e)}")
