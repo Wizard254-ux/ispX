@@ -19,6 +19,8 @@ services:
       - .:/app
       - openvpn_client:/etc/openvpn/client
       - hotspot_templates:/var/www/templates
+      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa  # Use direct bind mount instead of volume
+
     networks:
       - app-network
 
@@ -47,7 +49,8 @@ services:
       - .:/app
       - openvpn_client:/etc/openvpn/client
       - hotspot_templates:/var/www/templates
-      - openvpn_easyrsa:/etc/openvpn/easy-rsa  # Add this
+      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa  # Mount host certificates
+
 
     networks:
       - app-network

@@ -10,15 +10,27 @@ def generate_openvpn_config(provision_identity, output_path):
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Change to the EasyRSA directory
-        os.chdir('/etc/openvpn/easy-rsa')
+        # Generate certificate on the host system using subprocess
+        # Note: This requires the container to have appropriate permissions
+        host_cmd = f"cd /etc/openvpn/easy-rsa && ./easyrsa build-client-full {provision_identity} nopass"
         
-        # Generate client certificate
-        subprocess.run([
-            './easyrsa', 'build-client-full', provision_identity, 'nopass'
-        ], check=True)
+        # Use sudo if needed (this might require setting up passwordless sudo in the container)
+        result = subprocess.run(host_cmd, shell=True, capture_output=True, text=True)
         
-        # Create enhanced OpenVPN configuration
+        if result.returncode != 0:
+            raise Exception(f"Failed to generate client certificate: {result.stderr}")
+        
+        # Read certificate files
+        with open('/etc/openvpn/easy-rsa/pki/ca.crt', 'r') as f:
+            ca_cert = f.read().strip()
+            
+        with open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt', 'r') as f:
+            client_cert = f.read().strip()
+            
+        with open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key', 'r') as f:
+            client_key = f.read().strip()
+        
+        # Create client configuration with proper certificate verification options
         config = f"""client
 dev tun
 proto tcp
@@ -32,25 +44,24 @@ auth SHA256
 cipher AES-256-CBC
 data-ciphers AES-256-CBC
 data-ciphers-fallback AES-256-CBC
+verify-x509-name server name
 verb 3
 
 <ca>
-{open('/etc/openvpn/easy-rsa/pki/ca.crt').read().strip()}
+{ca_cert}
 </ca>
-
 <cert>
-{open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt').read().strip()}
+{client_cert}
 </cert>
-
 <key>
-{open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key').read().strip()}
+{client_key}
 </key>
 """
         
         # Write configuration to file
         with open(output_path, 'w') as f:
             f.write(config)
-            
+        
         return True
     except Exception as e:
         raise Exception(f"Failed to generate OpenVPN configuration: {str(e)}")
