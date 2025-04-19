@@ -27,18 +27,23 @@ resolv-retry infinite
 nobind
 persist-key
 persist-tun
-auth SHA1
+remote-cert-tls server
+auth SHA256
 cipher AES-256-CBC
 data-ciphers AES-256-CBC
 data-ciphers-fallback AES-256-CBC
 verb 3
+verify-x509-name "server" name
+tls-client
 
 <ca>
 {open('/etc/openvpn/ca.crt').read().strip()}
 </ca>
+
 <cert>
 {open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt').read().strip()}
 </cert>
+
 <key>
 {open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key').read().strip()}
 </key>
