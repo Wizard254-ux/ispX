@@ -11,11 +11,23 @@ RUN apt-get update && apt-get install -y \
     easy-rsa \
     && rm -rf /var/lib/apt/lists/*
 
+# Set up EasyRSA
+RUN mkdir /etc/openvpn/easy-rsa && \
+    cp -r /usr/share/easy-rsa/* /etc/openvpn/easy-rsa && \
+    cd /etc/openvpn/easy-rsa && \
+    ./easyrsa init-pki && \
+    echo 'set_var EASYRSA_REQ_COUNTRY "US"\nset_var EASYRSA_REQ_PROVINCE "California"\nset_var EASYRSA_REQ_CITY "San Francisco"\nset_var EASYRSA_REQ_ORG "My Organization"\nset_var EASYRSA_REQ_EMAIL "admin@example.com"\nset_var EASYRSA_REQ_OU "My Organizational Unit"\nset_var EASYRSA_BATCH "1"' > vars && \
+    ./easyrsa build-ca nopass && \
+    ./easyrsa gen-dh && \
+    ./easyrsa build-server-full server nopass && \
+    ln -s /etc/openvpn/easy-rsa/easyrsa /usr/local/bin/
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /app/static /app/templates /app/prometheus \
     /etc/openvpn/client /var/www/templates && \
-    chown -R appuser:appuser /app /etc/openvpn/client /var/www/templates
+    chown -R appuser:appuser /app /etc/openvpn/client /var/www/templates && \
+    chmod -R 755 /etc/openvpn/easy-rsa/pki
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
@@ -31,6 +43,7 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV FLASK_CONFIG=production
 ENV PYTHONUNBUFFERED=1
+ENV PATH="/etc/openvpn/easy-rsa:${PATH}"
 
 # Switch to non-root user
 USER appuser
