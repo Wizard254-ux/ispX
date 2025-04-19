@@ -15,8 +15,10 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir -p /etc/openvpn/easy-rsa && \
     cp -r /usr/share/easy-rsa/* /etc/openvpn/easy-rsa && \
     cd /etc/openvpn/easy-rsa && \
-    echo 'set_var EASYRSA_REQ_COUNTRY "US"\nset_var EASYRSA_REQ_PROVINCE "California"\nset_var EASYRSA_REQ_CITY "San Francisco"\nset_var EASYRSA_REQ_ORG "My Organization"\nset_var EASYRSA_REQ_EMAIL "admin@example.com"\nset_var EASYRSA_REQ_OU "My Organizational Unit"\nset_var EASYRSA_BATCH "1"' > vars && \
+    echo 'set_var EASYRSA_REQ_COUNTRY...' > vars && \
     ./easyrsa init-pki && \
+    echo 'set_var EASYRSA_REQ_COUNTRY "US"\nset_var EASYRSA_REQ_PROVINCE "California"\nset_var EASYRSA_REQ_CITY "San Francisco"\nset_var EASYRSA_REQ_ORG "My Organization"\nset_var EASYRSA_REQ_EMAIL "admin@example.com"\nset_var EASYRSA_REQ_OU "My Organizational Unit"\nset_var EASYRSA_BATCH "1"' > pki/vars && \
+    rm -f vars && \
     ./easyrsa build-ca nopass && \
     ./easyrsa gen-dh && \
     ./easyrsa build-server-full server nopass && \
@@ -34,6 +36,10 @@ RUN useradd -m -u 1000 appuser && \
     /etc/openvpn/client /var/www/templates && \
     chown -R appuser:appuser /app /etc/openvpn/client /var/www/templates && \
     chown -R appuser:appuser /etc/openvpn/easy-rsa
+
+# Run both web and celery as same user
+RUN useradd -m vpnuser && \
+    chown -R vpnuser:vpnuser /etc/openvpn
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
