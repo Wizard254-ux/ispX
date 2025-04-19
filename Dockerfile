@@ -34,7 +34,8 @@ RUN useradd -m -u 1000 appuser && \
     /etc/openvpn/client /var/www/templates && \
     chown -R appuser:appuser /app /etc/openvpn/client /var/www/templates && \
     chown -R appuser:appuser /etc/openvpn && \
-    chmod -R 755 /etc/openvpn/easy-rsa && \
+    chmod -R 777 /etc/openvpn/easy-rsa/pki && \
+    chmod -R 777 /etc/openvpn/easy-rsa && \
     chmod -R 755 /etc/openvpn/client
 
 # Copy requirements first to leverage Docker cache
