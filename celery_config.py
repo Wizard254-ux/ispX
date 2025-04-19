@@ -4,7 +4,7 @@ import os
 
 # Docker Redis configuration
 REDIS_HOST = os.getenv('REDIS_HOST', 'redis')  # Using Docker service name
-REDIS_PORT = os.getenv('REDIS_PORT', '6380')  # Changed to 6380
+REDIS_PORT = os.getenv('REDIS_PORT', '6379')  # Using internal Redis port
 REDIS_PASSWORD = os.getenv('REDIS_PASSWORD', None)
 REDIS_DB = os.getenv('REDIS_DB', '0')
 

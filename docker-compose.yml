@@ -7,9 +7,10 @@ services:
       - "8000:8000"
     environment:
       - FLASK_ENV=production
-      - REDIS_URL=redis://redis:6380/0
+      - REDIS_URL=redis://redis:6379/0
       - VPN_HOST=openvpn
       - VPN_PORT=1194
+      
       - VPN_CLIENT_DIR=/etc/openvpn/client
       - HOTSPOT_TEMPLATE_DIR=/var/www/templates
     depends_on:
@@ -33,7 +34,7 @@ services:
     command: celery -A tasks worker --loglevel=info
     environment:
       - FLASK_ENV=production
-      - REDIS_URL=redis://redis:6380/0
+      - REDIS_URL=redis://redis:6379/0
       - VPN_HOST=openvpn
       - VPN_PORT=1194
       - VPN_CLIENT_DIR=/etc/openvpn/client
