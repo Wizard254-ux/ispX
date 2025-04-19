@@ -12,14 +12,18 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Set up EasyRSA
-RUN mkdir /etc/openvpn/easy-rsa && \
+RUN mkdir -p /etc/openvpn/easy-rsa && \
     cp -r /usr/share/easy-rsa/* /etc/openvpn/easy-rsa && \
     cd /etc/openvpn/easy-rsa && \
-    ./easyrsa init-pki && \
     echo 'set_var EASYRSA_REQ_COUNTRY "US"\nset_var EASYRSA_REQ_PROVINCE "California"\nset_var EASYRSA_REQ_CITY "San Francisco"\nset_var EASYRSA_REQ_ORG "My Organization"\nset_var EASYRSA_REQ_EMAIL "admin@example.com"\nset_var EASYRSA_REQ_OU "My Organizational Unit"\nset_var EASYRSA_BATCH "1"' > vars && \
+    ./easyrsa init-pki && \
     ./easyrsa build-ca nopass && \
     ./easyrsa gen-dh && \
     ./easyrsa build-server-full server nopass && \
+    cp pki/ca.crt /etc/openvpn/ && \
+    cp pki/issued/server.crt /etc/openvpn/ && \
+    cp pki/private/server.key /etc/openvpn/ && \
+    cp pki/dh.pem /etc/openvpn/ && \
     ln -s /etc/openvpn/easy-rsa/easyrsa /usr/local/bin/
 
 # Create non-root user
