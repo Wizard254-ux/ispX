@@ -24,14 +24,16 @@ RUN mkdir -p /etc/openvpn/easy-rsa && \
     cp pki/issued/server.crt /etc/openvpn/ && \
     cp pki/private/server.key /etc/openvpn/ && \
     cp pki/dh.pem /etc/openvpn/ && \
-    ln -s /etc/openvpn/easy-rsa/easyrsa /usr/local/bin/
+    ln -s /etc/openvpn/easy-rsa/easyrsa /usr/local/bin/ && \
+    chmod -R 755 /etc/openvpn/easy-rsa && \
+    chmod -R 755 /etc/openvpn/client
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /app/static /app/templates /app/prometheus \
     /etc/openvpn/client /var/www/templates && \
     chown -R appuser:appuser /app /etc/openvpn/client /var/www/templates && \
-    chmod -R 755 /etc/openvpn/easy-rsa/pki
+    chown -R appuser:appuser /etc/openvpn/easy-rsa
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
@@ -48,6 +50,8 @@ ENV FLASK_ENV=production
 ENV FLASK_CONFIG=production
 ENV PYTHONUNBUFFERED=1
 ENV PATH="/etc/openvpn/easy-rsa:${PATH}"
+ENV EASYRSA=/etc/openvpn/easy-rsa
+ENV EASYRSA_PKI=/etc/openvpn/easy-rsa/pki
 
 # Switch to non-root user
 USER appuser
