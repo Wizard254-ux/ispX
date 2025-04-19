@@ -6,7 +6,7 @@ class Config:
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-jwt-secret-here')
     
     # OpenVPN configuration
-    VPN_HOST = os.getenv('VPN_HOST', '34.45.7.160')
+    VPN_HOST = os.getenv('VPN_HOST', '34.60.44.191')
     VPN_PORT = int(os.getenv('VPN_PORT', 1194))
     VPN_CLIENT_DIR = os.getenv('VPN_CLIENT_DIR', '/etc/openvpn/client')
     

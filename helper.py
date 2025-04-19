@@ -20,7 +20,7 @@ def generate_openvpn_config(provision_identity, output_path):
         config = f"""client
 dev tun
 proto tcp
-remote {Config.VPN_HOST} {Config.VPN_PORT}
+remote 34.60.44.191 {Config.VPN_PORT}
 resolv-retry infinite
 nobind
 persist-key
