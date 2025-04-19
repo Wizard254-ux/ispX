@@ -1,3 +1,7 @@
+import os
+import subprocess
+from config import Config
+
 def generate_openvpn_config(provision_identity, output_path):
     """Generate OpenVPN client configuration file."""
     try:
@@ -12,7 +16,7 @@ def generate_openvpn_config(provision_identity, output_path):
             './easyrsa', 'build-client-full', provision_identity, 'nopass'
         ], check=True)
         
-        # Create enhanced OpenVPN configuration
+        # Create simple OpenVPN configuration
         config = f"""client
 dev tun
 proto tcp
@@ -23,10 +27,7 @@ persist-key
 persist-tun
 auth SHA1
 cipher AES-256-CBC
-data-ciphers AES-256-CBC
-data-ciphers-fallback AES-256-CBC
 verb 3
-
 <ca>
 {open('/etc/openvpn/ca.crt').read().strip()}
 </ca>
