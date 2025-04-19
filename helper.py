@@ -4,16 +4,16 @@ from celery import shared_task
 from config import Config
 
 
-
 def generate_openvpn_config(provision_identity, output_path):
-
     pki_path = "/etc/openvpn/easy-rsa/pki"
+
     if not os.path.exists(pki_path):
-            init_cmd = "sudo /etc/openvpn/easy-rsa/easyrsa init-pki"
-            init_result = subprocess.run(init_cmd, shell=True, capture_output=True, text=True)
-    if init_result.returncode != 0:
-        raise Exception(f"Failed to initialize PKI: {init_result.stderr}")
-    """Generate OpenVPN client configuration file."""
+        init_cmd = "sudo /etc/openvpn/easy-rsa/easyrsa init-pki"
+        init_result = subprocess.run(init_cmd, shell=True, capture_output=True, text=True)
+
+        if init_result.returncode != 0:
+            raise Exception(f"Failed to initialize PKI: {init_result.stderr}")
+
     try:
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -63,5 +63,6 @@ verb 3
             f.write(config)
         
         return True
+
     except Exception as e:
         raise Exception(f"Failed to generate OpenVPN configuration: {str(e)}")
