@@ -28,13 +28,12 @@ nobind
 persist-key
 persist-tun
 remote-cert-tls server
+ns-cert-type server
 auth SHA256
 cipher AES-256-CBC
 data-ciphers AES-256-CBC
 data-ciphers-fallback AES-256-CBC
 verb 3
-verify-x509-name "server" name
-tls-client
 
 <ca>
 {open('/etc/openvpn/ca.crt').read().strip()}
