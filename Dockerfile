@@ -4,6 +4,16 @@ FROM python:3.11-slim
 # Set working directory
 WORKDIR /app
 
+# Add to your Dockerfile, before the USER appuser line:
+
+# Set up sudo for appuser to run EasyRSA commands
+RUN apt-get update && apt-get install -y sudo && \
+    echo "appuser ALL=(ALL) NOPASSWD: /etc/openvpn/easy-rsa/easyrsa" >> /etc/sudoers && \
+    echo "appuser ALL=(ALL) NOPASSWD: /bin/mkdir" >> /etc/sudoers && \
+    echo "appuser ALL=(ALL) NOPASSWD: /bin/cat" >> /etc/sudoers && \
+    echo "appuser ALL=(ALL) NOPASSWD: /bin/cp" >> /etc/sudoers && \
+    echo "appuser ALL=(ALL) NOPASSWD: /bin/chmod" >> /etc/sudoers
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \

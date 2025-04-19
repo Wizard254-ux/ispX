@@ -3,34 +3,25 @@ import subprocess
 from celery import shared_task
 from config import Config
 
-
 def generate_openvpn_config(provision_identity, output_path):
     """Generate OpenVPN client configuration file."""
     try:
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Generate certificate on the host system using subprocess
-        # Note: This requires the container to have appropriate permissions
-        host_cmd = f"cd /etc/openvpn/easy-rsa && ./easyrsa build-client-full {provision_identity} nopass"
-        
-        # Use sudo if needed (this might require setting up passwordless sudo in the container)
-        result = subprocess.run(host_cmd, shell=True, capture_output=True, text=True)
+        # Generate client certificate using sudo
+        sudo_cmd = f"sudo /etc/openvpn/easy-rsa/easyrsa build-client-full {provision_identity} nopass"
+        result = subprocess.run(sudo_cmd, shell=True, capture_output=True, text=True)
         
         if result.returncode != 0:
             raise Exception(f"Failed to generate client certificate: {result.stderr}")
         
-        # Read certificate files
-        with open('/etc/openvpn/easy-rsa/pki/ca.crt', 'r') as f:
-            ca_cert = f.read().strip()
-            
-        with open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt', 'r') as f:
-            client_cert = f.read().strip()
-            
-        with open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key', 'r') as f:
-            client_key = f.read().strip()
+        # Read certificate files using sudo
+        ca_cert = subprocess.check_output("sudo cat /etc/openvpn/easy-rsa/pki/ca.crt", shell=True).decode().strip()
+        client_cert = subprocess.check_output(f"sudo cat /etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt", shell=True).decode().strip()
+        client_key = subprocess.check_output(f"sudo cat /etc/openvpn/easy-rsa/pki/private/{provision_identity}.key", shell=True).decode().strip()
         
-        # Create client configuration with proper certificate verification options
+        # Create client configuration
         config = f"""client
 dev tun
 proto tcp
