@@ -19,13 +19,13 @@ def generate_openvpn_config(provision_identity, output_path):
         # Create OpenVPN configuration
         config = f"""client
 dev tun
-proto udp
+proto tcp
 remote {Config.VPN_HOST} {Config.VPN_PORT}
 resolv-retry infinite
 nobind
 persist-key
 persist-tun
-remote-cert-tls server
+auth SHA1
 cipher AES-256-CBC
 verb 3
 <ca>
