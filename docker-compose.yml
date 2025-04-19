@@ -19,6 +19,7 @@ services:
       - .:/app
       - openvpn_client:/etc/openvpn/client
       - hotspot_templates:/var/www/templates
+      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa:ro
     networks:
       - app-network
 
@@ -47,8 +48,7 @@ services:
       - .:/app
       - openvpn_client:/etc/openvpn/client
       - hotspot_templates:/var/www/templates
-      - openvpn_easyrsa:/etc/openvpn/easy-rsa  # Add this
-
+      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa:ro
     networks:
       - app-network
 
@@ -59,4 +59,3 @@ networks:
 volumes:
   openvpn_client:
   hotspot_templates: 
-  openvpn_easyrsa:
