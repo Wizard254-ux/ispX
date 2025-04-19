@@ -26,20 +26,16 @@ RUN mkdir -p /etc/openvpn/easy-rsa && \
     cp pki/issued/server.crt /etc/openvpn/ && \
     cp pki/private/server.key /etc/openvpn/ && \
     cp pki/dh.pem /etc/openvpn/ && \
-    ln -s /etc/openvpn/easy-rsa/easyrsa /usr/local/bin/ && \
-    chmod -R 755 /etc/openvpn/easy-rsa && \
-    chmod -R 755 /etc/openvpn/client
+    ln -s /etc/openvpn/easy-rsa/easyrsa /usr/local/bin/
 
-# Create non-root user
+# Create non-root user and set permissions
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /app/static /app/templates /app/prometheus \
     /etc/openvpn/client /var/www/templates && \
     chown -R appuser:appuser /app /etc/openvpn/client /var/www/templates && \
-    chown -R appuser:appuser /etc/openvpn/easy-rsa
-
-# Run both web and celery as same user
-RUN useradd -m vpnuser && \
-    chown -R vpnuser:vpnuser /etc/openvpn
+    chown -R appuser:appuser /etc/openvpn && \
+    chmod -R 755 /etc/openvpn/easy-rsa && \
+    chmod -R 755 /etc/openvpn/client
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
