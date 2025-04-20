@@ -3,7 +3,7 @@ import subprocess
 from config import Config
 
 def generate_openvpn_config(provision_identity, output_path):
-    """Generate OpenVPN client configuration file."""
+    """Generate OpenVPN client configuration file using system certificates."""
     try:
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)

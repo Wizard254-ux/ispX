@@ -17,7 +17,8 @@ services:
       - redis
     volumes:
       - .:/app
-      - openvpn_client:/etc/openvpn/client
+      - /etc/openvpn/client:/etc/openvpn/client
+      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa:ro
       - hotspot_templates:/var/www/templates
     networks:
       - app-network
@@ -45,10 +46,9 @@ services:
       - web
     volumes:
       - .:/app
-      - openvpn_client:/etc/openvpn/client
+      - /etc/openvpn/client:/etc/openvpn/client
+      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa:ro
       - hotspot_templates:/var/www/templates
-      - openvpn_easyrsa:/etc/openvpn/easy-rsa  # Add this
-
     networks:
       - app-network
 
@@ -57,6 +57,4 @@ networks:
     driver: bridge
 
 volumes:
-  openvpn_client:
-  hotspot_templates: 
-  openvpn_easyrsa:
+  hotspot_templates:
