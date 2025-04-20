@@ -8,15 +8,7 @@ def generate_openvpn_config(provision_identity, output_path):
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
-        # Change to the EasyRSA directory
-        os.chdir('/etc/openvpn/easy-rsa')
-        
-        # Generate client certificate
-        subprocess.run([
-            './easyrsa', 'build-client-full', provision_identity, 'nopass'
-        ], check=True)
-        
-        # Create simple OpenVPN configuration
+        # Create OpenVPN configuration using system certificates
         config = f"""client
 dev tun
 proto tcp
@@ -25,15 +17,21 @@ resolv-retry infinite
 nobind
 persist-key
 persist-tun
-auth SHA1
+remote-cert-tls server
+auth SHA256
 cipher AES-256-CBC
+data-ciphers AES-256-CBC
+data-ciphers-fallback AES-256-CBC
 verb 3
+
 <ca>
-{open('/etc/openvpn/ca.crt').read().strip()}
+{open('/etc/openvpn/easy-rsa/pki/ca.crt').read().strip()}
 </ca>
+
 <cert>
 {open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt').read().strip()}
 </cert>
+
 <key>
 {open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key').read().strip()}
 </key>
