@@ -1,8 +1,6 @@
 import os
 import subprocess
-from celery import shared_task
 from config import Config
-
 
 def generate_openvpn_config(provision_identity, output_path):
     """Generate OpenVPN client configuration file."""
@@ -18,7 +16,7 @@ def generate_openvpn_config(provision_identity, output_path):
             './easyrsa', 'build-client-full', provision_identity, 'nopass'
         ], check=True)
         
-        # Create enhanced OpenVPN configuration
+        # Create simple OpenVPN configuration
         config = f"""client
 dev tun
 proto tcp
@@ -27,20 +25,15 @@ resolv-retry infinite
 nobind
 persist-key
 persist-tun
-remote-cert-tls server
-auth SHA256
+auth SHA1
 cipher AES-256-CBC
-data-ciphers AES-256-CBC
 verb 3
-
 <ca>
-{open('/etc/openvpn/easy-rsa/pki/ca.crt').read().strip()}
+{open('/etc/openvpn/ca.crt').read().strip()}
 </ca>
-
 <cert>
 {open(f'/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt').read().strip()}
 </cert>
-
 <key>
 {open(f'/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key').read().strip()}
 </key>
