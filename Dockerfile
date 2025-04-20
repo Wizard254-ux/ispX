@@ -30,6 +30,10 @@ ENV FLASK_APP=app.py
 ENV FLASK_ENV=production
 ENV FLASK_CONFIG=production
 ENV PYTHONUNBUFFERED=1
+ENV REDIS_URL=redis://redis:6379/0
+
+# Switch to non-root user
+USER appuser
 
 # Expose port
 EXPOSE 8000
