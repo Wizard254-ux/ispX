@@ -1,11 +1,11 @@
 import os
 import subprocess
 from config import Config
+
+
 def generate_openvpn_config(provision_identity, output_path):
     """Generate OpenVPN client configuration file."""
     try:
-        logger.debug(f"Starting certificate generation for {provision_identity}")
-
         # Create output directory if it doesn't exist
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
        
@@ -13,11 +13,13 @@ def generate_openvpn_config(provision_identity, output_path):
         os.chdir('/etc/openvpn/easy-rsa')
        
         # Generate client certificate
+        logger.debug(f"Running easyrsa to build client certificate for {provision_identity}")
         subprocess.run([
             './easyrsa', 'build-client-full', provision_identity, 'nopass'
         ], check=True)
        
         # Create simple OpenVPN configuration
+        logger.debug(f"Creating OpenVPN config file for {provision_identity}")
         config = f"""client
 dev tun
 proto tcp
@@ -43,10 +45,9 @@ verb 3
         # Write configuration to file
         with open(output_path, 'w') as f:
             f.write(config)
-            logger.debug(f"Successfully generated configuration for {provision_identity}")
- 
+        
+        logger.debug(f"Configuration written to {output_path}")
         return True
     except Exception as e:
-        logger.error(f"Error generating config for {provision_identity}: {str(e)}")
-
+        logger.error(f"Failed to generate OpenVPN configuration: {str(e)}")
         raise Exception(f"Failed to generate OpenVPN configuration: {str(e)}")
