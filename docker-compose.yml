@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   web:
     build: .
@@ -10,30 +9,20 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - VPN_HOST=openvpn
       - VPN_PORT=1194
-      
       - VPN_CLIENT_DIR=/etc/openvpn/client
       - HOTSPOT_TEMPLATE_DIR=/var/www/templates
     depends_on:
       - redis
     volumes:
       - .:/app
-      - /etc/openvpn/client:/etc/openvpn/client
-      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa:ro
+      - /etc/openvpn:/etc/openvpn  # Mount the entire host OpenVPN directory
       - hotspot_templates:/var/www/templates
     networks:
       - app-network
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    networks:
-      - app-network
-
+  
   celery_worker:
     build: .
     command: celery -A tasks worker --loglevel=info
-    user: "1000:1000"
     environment:
       - FLASK_ENV=production
       - REDIS_URL=redis://redis:6379/0
@@ -46,15 +35,7 @@ services:
       - web
     volumes:
       - .:/app
-      - /etc/openvpn/client:/etc/openvpn/client
-      - /etc/openvpn/easy-rsa:/etc/openvpn/easy-rsa:ro
+      - /etc/openvpn:/etc/openvpn  # Mount the entire host OpenVPN directory
       - hotspot_templates:/var/www/templates
     networks:
       - app-network
-
-networks:
-  app-network:
-    driver: bridge
-
-volumes:
-  hotspot_templates:
