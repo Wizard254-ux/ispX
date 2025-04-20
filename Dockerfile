@@ -5,9 +5,13 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Install only necessary system dependencies
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    gnupg \
+    dirmngr \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
