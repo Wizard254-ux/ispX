@@ -7,7 +7,7 @@ WORKDIR /app
 # Install only necessary system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
-    openvpn \  # Still install the openvpn package for the client tools
+    # openvpn \  # Still install the openvpn package for the client tools
     && rm -rf /var/lib/apt/lists/*
 
 # Create non-root user
