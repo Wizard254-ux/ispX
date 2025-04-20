@@ -2,8 +2,7 @@ version: '3.8'
 services:
   web:
     build: .
-      user: "root"  # Change from appuser to root
-
+    user: "root"  # Change from appuser to root
     ports:
       - "8000:8000"
     environment:
