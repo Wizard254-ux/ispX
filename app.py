@@ -11,9 +11,8 @@ import openvpn_api
 from celery.result import AsyncResult
 from config import Config
 from security import validate_provision_identity, generate_secret, require_secret
-from tasks import generate_certificate
+from tasks import generate_certificate,celery
 from werkzeug.urls import url_quote
-from taks import celery
 
 app = Flask(__name__)
 app.config.from_object(Config)
