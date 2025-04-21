@@ -23,8 +23,8 @@ def require_secret(f):
     """Decorator to require a valid secret for a route."""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        secret = kwargs.get('secret')
-        provision_identity = kwargs.get('provision_identity')
+        secret = request.args.get('secret')
+        provision_identity = request.args.get('provision_identity')
         
         if not secret or not provision_identity:
             return jsonify({"error": "Missing secret or provision identity"}), 401
