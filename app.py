@@ -132,7 +132,7 @@ def getIpAddress(provision_identity, secret):
     try:
         print(f"Getting IP for provision_identity: {provision_identity}")
         # Get the status from OpenVPN
-         if v is None:
+        if v is None:
             return jsonify({"error": "OpenVPN management interface not connected"}), 503
         
         try:
