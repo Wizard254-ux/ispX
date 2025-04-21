@@ -68,28 +68,39 @@ def mtk_create_new_provision(provision_identity):
 @app.route('/mikrotik/openvpn/task/<task_id>')
 def get_task_status(task_id):
     """Get the status of a certificate generation task."""
-    # with REQUEST_LATENCY.labels(endpoint='/task_status').time():
     task_result = AsyncResult(task_id)
 
     if task_result.ready():
         if task_result.successful():
             result = task_result.get()
             if result['status'] == 'success':
-                # REQUEST_COUNT.labels(method='GET', endpoint='/task_status', status='200').inc()
-                return jsonify(result), 200
+                return jsonify({
+                    "status": "success",
+                    "message": "Certificate generated successfully",
+                    "provision_identity": result.get('provision_identity'),
+                    "task_id": task_id,
+                    "state": "completed"
+                }), 200
             else:
-                # REQUEST_COUNT.labels(method='GET', endpoint='/task_status', status='400').inc()
-                return jsonify(result), 400
+                return jsonify({
+                    "status": "error",
+                    "message": result.get('message', 'Unknown error'),
+                    "provision_identity": result.get('provision_identity'),
+                    "task_id": task_id,
+                    "state": "failed"
+                }), 400
         else:
-            # REQUEST_COUNT.labels(method='GET', endpoint='/task_status', status='500').inc()
             return jsonify({
                 "status": "error",
-                "message": str(task_result.result)
+                "message": str(task_result.result),
+                "task_id": task_id,
+                "state": "failed"
             }), 500
     else:
-        # REQUEST_COUNT.labels(method='GET', endpoint='/task_status', status='202').inc()
         return jsonify({
-            "status": "processing",
+            "status": "pending",
+            "message": "Certificate generation in progress",
+            "task_id": task_id,
             "state": task_result.state
         }), 202
 
@@ -103,6 +114,24 @@ def mtk_openvpn(provision_identity, secret):
         if not os.path.exists(path):
             return jsonify({"error": "Configuration not found"}), 404
         return send_file(path, as_attachment=True)
+    except Exception as e:
+        return jsonify({"error": "Internal server error"}), 500
+
+
+@app.route("/server/ip/")
+@require_secret
+def getIpAddress(provision_identity, secret, form):
+    """Returning the IP address of the client"""
+    try:
+        # Get the status from OpenVPN
+        status = v.get_status()
+        
+        # Find the client by its common name (provision_identity)
+        for client in status.client_list:
+            if client.common_name == provision_identity:
+                return jsonify({"ip": client.real_address}), 200
+                
+        return jsonify({"error": "Client not connected"}), 404
     except Exception as e:
         return jsonify({"error": "Internal server error"}), 500
 
