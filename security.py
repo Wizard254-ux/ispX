@@ -33,5 +33,6 @@ def require_secret(f):
         if not hmac.compare_digest(secret, expected_secret):
             return jsonify({"error": "Invalid secret"}), 401
             
-        return f(*args, **kwargs)
+        return f(provision_identity=provision_identity, secret=secret, *args, **kwargs)
+
     return decorated_function 
