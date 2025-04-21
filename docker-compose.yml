@@ -32,7 +32,7 @@ services:
   
   celery_worker:
     build: .
-    command: celery -A celery_app.celery worker --loglevel=info
+    command: celery -A celery_config.celery worker --loglevel=info
     environment:
       - FLASK_ENV=production
       - REDIS_URL=redis://redis:6379/0
