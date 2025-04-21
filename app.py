@@ -125,9 +125,10 @@ def getIpAddress(provision_identity, secret):
     try:
         # Get the status from OpenVPN
         status = v.get_status()
-        
+        print('open vpn status ',status)
         # Find the client by its common name (provision_identity)
         for client in status.client_list:
+            print('open vpn status 666 ',client)
             if client.common_name == provision_identity:
                 return jsonify({"ip": client.real_address}), 200
                 
