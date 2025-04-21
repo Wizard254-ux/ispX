@@ -123,17 +123,30 @@ def mtk_openvpn(provision_identity, secret):
 def getIpAddress(provision_identity, secret):
     """Returning the IP address of the client"""
     try:
+        print(f"Getting IP for provision_identity: {provision_identity}")
         # Get the status from OpenVPN
-        status = v.get_status()
-        print('open vpn status ',status)
+        try:
+            status = v.get_status()
+            print('OpenVPN status:', status)
+        except Exception as e:
+            print(f"Error getting OpenVPN status: {str(e)}")
+            return jsonify({"error": "Failed to get OpenVPN status"}), 500
+
         # Find the client by its common name (provision_identity)
+        if not hasattr(status, 'client_list'):
+            print("No client_list in status")
+            return jsonify({"error": "No clients connected"}), 404
+
         for client in status.client_list:
-            print('open vpn status 666 ',client)
+            print(f"Checking client: {client.common_name}")
             if client.common_name == provision_identity:
+                print(f"Found client with IP: {client.real_address}")
                 return jsonify({"ip": client.real_address}), 200
                 
+        print(f"No client found with provision_identity: {provision_identity}")
         return jsonify({"error": "Client not connected"}), 404
     except Exception as e:
+        print(f"Unexpected error: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
 
 
