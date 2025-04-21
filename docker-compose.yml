@@ -9,8 +9,10 @@ services:
     environment:
       - FLASK_ENV=production
       - REDIS_URL=redis://redis:6379/0
-      - VPN_HOST=openvpn
-      - VPN_PORT=1194
+      # - VPN_HOST=openvpn
+      # - VPN_PORT=1194
+      - VPN_HOST=host.docker.internal
+      - VPN_PORT=7505
       - VPN_CLIENT_DIR=/etc/openvpn/client
       - HOTSPOT_TEMPLATE_DIR=/var/www/templates
     depends_on:
