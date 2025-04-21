@@ -1,3 +1,5 @@
+#config.py
+
 from celery import Celery
 from config import Config
 import os

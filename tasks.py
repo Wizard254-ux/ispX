@@ -1,11 +1,30 @@
+#tasks.py
+
 import os
 import subprocess
 from celery import Celery
 from config import Config
 from helper import generate_openvpn_config
 
-# Initialize Celery
-celery = Celery('tasks', broker=Config.CELERY_BROKER_URL)
+# Initialize Celery with both broker and backend
+celery = Celery('tasks', 
+                broker=Config.CELERY_BROKER_URL,
+                backend=Config.CELERY_RESULT_BACKEND)
+
+# Configure Celery (optional - move these settings from your other file if needed)
+celery.conf.update(
+    task_serializer='json',
+    accept_content=['json'],
+    result_serializer='json',
+    timezone='UTC',
+    enable_utc=True,
+    task_track_started=True,
+    task_time_limit=300,  # 5 minutes
+    worker_max_tasks_per_child=1,  # Restart worker after each task
+    broker_connection_retry_on_startup=True,
+    broker_connection_retry=True,
+    broker_connection_max_retries=10
+)
 
 @celery.task
 def generate_certificate(provision_identity):

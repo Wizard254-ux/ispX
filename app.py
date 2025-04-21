@@ -13,6 +13,7 @@ from config import Config
 from security import validate_provision_identity, generate_secret, require_secret
 from tasks import generate_certificate
 from werkzeug.urls import url_quote
+from taks import celery
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -68,7 +69,7 @@ def mtk_create_new_provision(provision_identity):
 @app.route('/mikrotik/openvpn/task/<task_id>')
 def get_task_status(task_id):
     """Get the status of a certificate generation task."""
-    task_result = AsyncResult(task_id)
+    task_result = AsyncResult(task_id,app=celery)
 
     if task_result.ready():
         if task_result.successful():
