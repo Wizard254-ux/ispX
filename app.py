@@ -18,8 +18,15 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # Initialize OpenVPN API
-v = openvpn_api.VPN(Config.VPN_HOST, Config.VPN_PORT)
-
+try:
+    v = openvpn_api.VPN(Config.VPN_HOST, Config.VPN_PORT)
+    # Test connection
+    _ = v.get_status()
+    print(f"Successfully connected to OpenVPN management at {Config.VPN_HOST}:{Config.VPN_PORT}")
+except Exception as e:
+    print(f"WARNING: Failed to connect to OpenVPN management interface: {str(e)}")
+    print(f"Using host: {Config.VPN_HOST}, port: {Config.VPN_PORT}")
+    v = None  # Set to None so we can check later
 
 @app.route('/')
 def hello_world():
@@ -125,6 +132,9 @@ def getIpAddress(provision_identity, secret):
     try:
         print(f"Getting IP for provision_identity: {provision_identity}")
         # Get the status from OpenVPN
+         if v is None:
+            return jsonify({"error": "OpenVPN management interface not connected"}), 503
+        
         try:
             status = v.get_status()
             print('OpenVPN status:', status)

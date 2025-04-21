@@ -5,9 +5,11 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY', 'your-secret-key-here')
     JWT_SECRET_KEY = os.getenv('JWT_SECRET_KEY', 'your-jwt-secret-here')
     
+    VPN_HOST = os.getenv('VPN_HOST', 'host.docker.internal')
+    VPN_PORT = os.getenv('VPN_PORT', '7505')
     # OpenVPN configuration
-    VPN_HOST = os.getenv('VPN_HOST', '34.60.44.191')
-    VPN_PORT = int(os.getenv('VPN_PORT', 1194))
+    # VPN_HOST = os.getenv('VPN_HOST', '34.60.44.191')
+    # VPN_PORT = int(os.getenv('VPN_PORT', 1194))
     VPN_CLIENT_DIR = os.getenv('VPN_CLIENT_DIR', '/etc/openvpn/client')
     
     # Hotspot configuration
