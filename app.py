@@ -120,7 +120,7 @@ def mtk_openvpn(provision_identity, secret):
 
 @app.route("/server/ip/")
 @require_secret
-def getIpAddress(provision_identity, secret, form):
+def getIpAddress(provision_identity, secret):
     """Returning the IP address of the client"""
     try:
         # Get the status from OpenVPN
