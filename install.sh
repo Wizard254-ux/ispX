@@ -706,6 +706,18 @@ echo -e "  ${GREEN}docker ps${NC}             # Check container status"
 echo -e "\n${YELLOW}Starting services with manage.sh...${NC}"
 chmod +x ./manage.sh
 chmod +x ./redis_test.py
+
+# Option 2: Fix permissions on the host system
+# Run these commands on your host system to grant appropriate permissions:
+chmod -R 777 /etc/openvpn/easy-rsa/pki
+chown -R 1000:1000 /etc/openvpn/easy-rsa/pki  # 1000 is the UID of appuser
+
+# Option 1: Fix permissions on the host
+# Run this command on your host system to grant write permission to the client directory:
+ mkdir -p /etc/openvpn/client
+ chmod 777 /etc/openvpn/client
+
+
 ./manage.sh start
 
 # Show service status
