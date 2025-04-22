@@ -34,7 +34,6 @@ dev tun
 proto tcp
 remote 35.226.234.138 {Config.VPN_PORT}
 resolv-retry infinite
-remote-cert-tls server
 nobind
 persist-key
 persist-tun
@@ -43,7 +42,6 @@ cipher AES-256-CBC
 data-ciphers AES-256-CBC
 data-ciphers-fallback AES-256-CBC
 verb 3
-tls-client
 
 
 <ca>
