@@ -177,14 +177,26 @@ def getIpAddress(provision_identity, secret):
         with open(status_file, 'r') as f:
             lines = f.readlines()
             
+        # Print header information
+        print("\nOpenVPN Status Information:")
+        print("-" * 50)
+        
         # Find the client section and look for our client
         client_section = False
         for line in lines:
             line = line.strip()
             
+            # Print the title and time information
+            if line.startswith("TITLE,"):
+                print(f"OpenVPN Version: {line.split(',', 1)[1]}")
+            elif line.startswith("TIME,"):
+                print(f"Status Updated: {line.split(',', 2)[1]}")
+            
             # Check if we're in the client list section
             if "CLIENT_LIST" in line:
                 client_section = True
+                print("\nConnected Clients:")
+                print("-" * 50)
                 continue
                 
             if client_section and line:
@@ -193,15 +205,26 @@ def getIpAddress(provision_identity, secret):
                 if len(parts) >= 3:  # Ensure we have at least Common Name and Real Address
                     common_name = parts[1]
                     real_address = parts[2]
+                    bytes_received = parts[5] if len(parts) > 5 else "N/A"
+                    bytes_sent = parts[6] if len(parts) > 6 else "N/A"
+                    connected_since = parts[7] if len(parts) > 7 else "N/A"
+                    
+                    # Print client information
+                    print(f"Client: {common_name}")
+                    print(f"IP: {real_address.split(':')[0]}")
+                    print(f"Bytes Received: {bytes_received}")
+                    print(f"Bytes Sent: {bytes_sent}")
+                    print(f"Connected Since: {connected_since}")
+                    print("-" * 30)
                     
                     # Check if this is our client
                     if common_name == provision_identity:
                         # Extract just the IP from the real address (format: IP:PORT)
                         ip = real_address.split(':')[0]
-                        print(f"Found client {provision_identity} with IP: {ip}")
+                        print(f"\nFound matching client {provision_identity} with IP: {ip}")
                         return jsonify({"ip": ip}), 200
                         
-        print(f"No client found with provision_identity: {provision_identity}")
+        print(f"\nNo client found with provision_identity: {provision_identity}")
         return jsonify({"error": "Client not connected"}), 404
         
     except Exception as e:
