@@ -15,6 +15,7 @@ from tasks import generate_certificate,celery
 from werkzeug.urls import url_quote
 import redis
 import json
+from main import admin_routs
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -278,6 +279,7 @@ def mtk_hostpot_ui(provision_identity, secret, form):
     except Exception as e:
         return jsonify({"error": "Internal server error"}), 500
 
+admin_routs.init(app)
 
 if __name__ == '__main__':
     app.run(debug=False)  # Set debug=False in production
