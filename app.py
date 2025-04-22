@@ -175,85 +175,88 @@ def getIpAddress(provision_identity, secret):
             
         # Read and parse the status file
         with open(status_file, 'r') as f:
-            lines = f.readlines()
+            content = f.read()
             
-        # Print header information
-        print("\nOpenVPN Status Information:")
+        print("\nOpenVPN Status Log Content:")
+        print("-" * 50)
+        print(content)
         print("-" * 50)
         
-        # Find the client section and look for our client
+        # Re-read for actual parsing
+        with open(status_file, 'r') as f:
+            lines = f.readlines()
+        
+        # Find both CLIENT_LIST and ROUTING_TABLE sections
+        client_list_section = False
         routing_table_section = False
-        client_section = False
+        headers = {}
         
         for line in lines:
             line = line.strip()
             
-            # Print the title and time information
-            if line.startswith("TITLE,"):
-                print(f"OpenVPN Version: {line.split(',', 1)[1]}")
-            elif line.startswith("TIME,"):
-                print(f"Status Updated: {line.split(',', 2)[1]}")
-            
-            # Check if we're in the routing table section
-            if "ROUTING_TABLE" in line:
-                routing_table_section = True
-                print("\nRouting Table:")
-                print("-" * 50)
-                continue
-                
-            # Check for client list section
-            if "CLIENT_LIST" in line:
-                client_section = True
+            # Detect section headers
+            if line.startswith("HEADER,CLIENT_LIST,"):
+                client_headers = line.split(',')[2:]  # Skip "HEADER" and "CLIENT_LIST"
+                headers["CLIENT_LIST"] = client_headers
+                client_list_section = True
                 routing_table_section = False
-                print("\nConnected Clients:")
-                print("-" * 50)
                 continue
                 
-            # First try to find the client in the routing table
-            if routing_table_section and line and "," not in line:
-                # Split the line by spaces for non-comma format
-                parts = line.split()
-                if len(parts) >= 2:
-                    virtual_address = parts[0]
-                    client_name = parts[1]
+            if line.startswith("HEADER,ROUTING_TABLE,"):
+                routing_headers = line.split(',')[2:]  # Skip "HEADER" and "ROUTING_TABLE"
+                headers["ROUTING_TABLE"] = routing_headers
+                routing_table_section = True
+                client_list_section = False
+                continue
+                
+            # Process CLIENT_LIST entries
+            if line.startswith("CLIENT_LIST,"):
+                parts = line.split(',')
+                if len(parts) > 1:
+                    common_name = parts[1]
+                    real_address = parts[2].split(':')[0] if len(parts) > 2 else None
+                    virtual_address = parts[3] if len(parts) > 3 else None
                     
-                    # Debug output
-                    print(f"Checking routing entry: {virtual_address} - {client_name}")
+                    print(f"Client entry - Common Name: '{common_name}', Real Address: '{real_address}', Virtual: '{virtual_address}'")
                     
-                    # Check if this is our client
-                    if client_name == provision_identity:
-                        print(f"\nFound matching client {provision_identity} with Virtual IP: {virtual_address}")
+                    # Try to match by common name
+                    if common_name == provision_identity:
+                        ip = virtual_address if virtual_address and virtual_address.strip() else real_address
+                        print(f"Found client match by common name: {provision_identity}, IP: {ip}")
+                        return jsonify({"ip": ip}), 200
+                        
+            # Process ROUTING_TABLE entries
+            if line.startswith("ROUTING_TABLE,"):
+                parts = line.split(',')
+                if len(parts) > 2:
+                    virtual_address = parts[1]
+                    common_name = parts[2]
+                    
+                    print(f"Routing entry - Virtual Address: '{virtual_address}', Common Name: '{common_name}'")
+                    
+                    # Try to match by common name
+                    if common_name == provision_identity:
+                        print(f"Found routing match by common name: {provision_identity}, IP: {virtual_address}")
                         return jsonify({"ip": virtual_address}), 200
+        
+        # If client is not found in the standard entries, let's check if there's any connection with a matching IP
+        # This is a fallback for non-standard configurations
+        for line in lines:
+            line = line.strip()
+            parts = line.split(',')
             
-            # Then try the standard client list format
-            if client_section and line:
-                if "," in line:
-                    # Comma-separated format
-                    parts = line.split(',')
-                    if len(parts) >= 3:
-                        common_name = parts[1]
-                        real_address = parts[2]
-                        
-                        # Debug output
-                        print(f"Checking client: {common_name}")
-                        
-                        if common_name == provision_identity:
-                            ip = real_address.split(':')[0]
-                            print(f"\nFound matching client {provision_identity} with IP: {ip}")
-                            return jsonify({"ip": ip}), 200
-                else:
-                    # Space-separated format
-                    parts = line.split()
-                    if len(parts) >= 2:
-                        # This is a fallback to handle different formats
-                        # Try to match the client name in any position
-                        if provision_identity in line:
-                            for i, part in enumerate(parts):
-                                if part == provision_identity and i > 0:
-                                    potential_ip = parts[i-1]
-                                    if '.' in potential_ip:  # Basic IP validation
-                                        print(f"\nFound matching client {provision_identity} with IP: {potential_ip}")
-                                        return jsonify({"ip": potential_ip}), 200
+            # Look for any line that contains the provision identity
+            if provision_identity in line:
+                print(f"Found line containing '{provision_identity}': {line}")
+                
+                # Extract IP-like strings from the line
+                import re
+                ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
+                ips = re.findall(ip_pattern, line)
+                
+                if ips:
+                    print(f"Found potential IP(s) in line containing '{provision_identity}': {ips}")
+                    return jsonify({"ip": ips[0]}), 200
         
         print(f"\nNo client found with provision_identity: {provision_identity}")
         return jsonify({"error": "Client not connected"}), 404
@@ -261,6 +264,7 @@ def getIpAddress(provision_identity, secret):
     except Exception as e:
         print(f"Error reading status file: {str(e)}")
         return jsonify({"error": f"Error reading status file: {str(e)}"}), 500
+
 @app.route("/mikrotik/hotspot/<provision_identity>/<secret>/<form>")
 @require_secret
 def mtk_hostpot_ui(provision_identity, secret, form):
