@@ -77,10 +77,10 @@ def get_task_status(task_id):
     """Get the status of a certificate generation task."""
     task_result = AsyncResult(task_id,app=celery)
 
+    print('resultsss ',task_result)
     if task_result.ready():
         if task_result.successful():
             result = task_result.get()
-            print('resultsss ',result)
             if result['status'] == 'success':
                 return jsonify({
                     "status": "success",
