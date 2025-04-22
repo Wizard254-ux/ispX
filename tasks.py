@@ -53,6 +53,8 @@ def generate_certificate(provision_identity):
         # Generate the client configuration file
         output_path = f"{Config.VPN_CLIENT_DIR}/{provision_identity}.ovpn"
         if generate_openvpn_config(provision_identity, output_path):
+            self.update_state(state='SUCCESS', meta=result)
+
             return {
                 "status": "success",
                 "message": "Certificate generated successfully",
