@@ -199,7 +199,7 @@ def getIpAddress(provision_identity, secret):
                 print("-" * 50)
                 continue
                 
-            if client_section and line:
+            if client_section and line and not line.startswith("ROUTING_TABLE") and not line.startswith("GLOBAL_STATS"):
                 # Split the line by commas
                 parts = line.split(',')
                 if len(parts) >= 3:  # Ensure we have at least Common Name and Real Address
