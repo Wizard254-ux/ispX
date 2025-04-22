@@ -16,7 +16,7 @@ RUN useradd -m -u 1000 appuser && \
     mkdir -p /app/static /app/templates /app/prometheus \
     /var/www/templates && \
     chown -R appuser:appuser /app /var/www/templates && \
-    chmod -R 777 /etc/openvpn/easy-rsa || true && \
+    chmod -R 777 /etc/openvpn || true && \
     chmod -R 777 /etc/openvpn/easy-rsa/pki || true && \
     chmod -R 755 /etc/openvpn/client /etc/openvpn/server || true
 
