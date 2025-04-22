@@ -42,9 +42,6 @@ def mtk_create_new_provision(provision_identity):
     """
     # with REQUEST_LATENCY.labels(endpoint='/create_provision').time():
     try:
-        # Validate provision identity
-        # validate_provision_identity(provision_identity)
-
         # Check if client already exists
         client_conf_path = f"{Config.VPN_CLIENT_DIR}/{provision_identity}.ovpn"
         if os.path.exists(client_conf_path):
