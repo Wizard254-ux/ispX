@@ -1,67 +1,61 @@
 version: '3.8'
+
 services:
   web:
     build: .
-    user: "0:0"  # Change from appuser to root
-
+    user: "0:0"
     ports:
       - "8000:8000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     environment:
       - FLASK_ENV=production
       - REDIS_URL=redis://redis:6379/0
       - VPN_HOST=openvpn
       - VPN_PORT=1194
-      # - VPN_HOST=host.docker.internal
-      # - VPN_PORT=7505
+      - VPN_PROTO=udp
       - VPN_CLIENT_DIR=/etc/openvpn/client
       - HOTSPOT_TEMPLATE_DIR=/var/www/templates
     depends_on:
       - redis
     volumes:
       - .:/app
-      - /etc/openvpn:/etc/openvpn  # Mount the entire host OpenVPN directory
-      - /var/log/openvpn/openvpn-status.log:/var/log/openvpn/openvpn-status.log  # Mount the OpenVPN status log
-      - hotspot_templates:/var/www/templates
+      - /etc/openvpn:/etc/openvpn
+      - /var/log/openvpn:/var/log/openvpn
+      - /var/www/templates:/var/www/templates
     networks:
       - app-network
-  
+
   redis:
     image: redis:7-alpine
-    command: ["redis-server", "--protected-mode", "no", "--replicaof", "no", "one"]
     ports:
       - "6379:6379"
+    command: redis-server --port 6379
     networks:
       - app-network
-  
+
   celery_worker:
     build: .
-    user: "0:0"
-    command: celery -A tasks.celery worker --loglevel=info
+    command: celery -A tasks worker --loglevel=info
+    user: "0:0"  # Also run as root
     environment:
       - FLASK_ENV=production
       - REDIS_URL=redis://redis:6379/0
       - VPN_HOST=openvpn
       - VPN_PORT=1194
-      # - VPN_HOST=host.docker.internal  # Change from 'openvpn' to host.docker.internal
-      # - VPN_PORT=7505  # Change from 1194 to 7505
+      - VPN_PROTO=udp
       - VPN_CLIENT_DIR=/etc/openvpn/client
       - HOTSPOT_TEMPLATE_DIR=/var/www/templates
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     depends_on:
       - redis
       - web
     volumes:
       - .:/app
-      - /etc/openvpn:/etc/openvpn  # Mount the entire host OpenVPN directory
-      - hotspot_templates:/var/www/templates
-      
+      - /etc/openvpn:/etc/openvpn
+      - /var/www/templates:/var/www/templates
     networks:
       - app-network
-    
 
 networks:
   app-network:
     driver: bridge
-volumes:
-  hotspot_templates:
