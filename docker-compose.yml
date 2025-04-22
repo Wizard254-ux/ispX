@@ -35,6 +35,7 @@ services:
   
   celery_worker:
     build: .
+    user: "0:0"
     command: celery -A tasks.celery worker --loglevel=info
     environment:
       - FLASK_ENV=production
