@@ -148,7 +148,7 @@ def get_task_status(task_id):
 
 @app.route("/mikrotik/openvpn/key")
 @require_secret
-def mtk_openvpn():
+def mtk_openvpn(provision_identity,secret):
     """Returning openVPN client of a given provision_identity"""
     try:
         provision_identity = request.args.get("provision_identity")
