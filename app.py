@@ -146,7 +146,7 @@ def get_task_status(task_id):
         }), 500
 
 
-@app.route("/mikrotik/openvpn/<provision_identity>/<secret>")
+@app.route("/mikrotik/openvpn/key")
 @require_secret
 def mtk_openvpn(provision_identity, secret):
     """Returning openVPN client of a given provision_identity"""
