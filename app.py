@@ -182,7 +182,9 @@ def getIpAddress(provision_identity, secret):
         print("-" * 50)
         
         # Find the client section and look for our client
+        routing_table_section = False
         client_section = False
+        
         for line in lines:
             line = line.strip()
             
@@ -192,45 +194,73 @@ def getIpAddress(provision_identity, secret):
             elif line.startswith("TIME,"):
                 print(f"Status Updated: {line.split(',', 2)[1]}")
             
-            # Check if we're in the client list section
+            # Check if we're in the routing table section
+            if "ROUTING_TABLE" in line:
+                routing_table_section = True
+                print("\nRouting Table:")
+                print("-" * 50)
+                continue
+                
+            # Check for client list section
             if "CLIENT_LIST" in line:
                 client_section = True
+                routing_table_section = False
                 print("\nConnected Clients:")
                 print("-" * 50)
                 continue
                 
-            if client_section and line:
-                # Split the line by commas
-                parts = line.split(',')
-                if len(parts) >= 3:  # Ensure we have at least Common Name and Real Address
-                    common_name = parts[1]
-                    real_address = parts[2]
-                    bytes_received = parts[5] if len(parts) > 5 else "N/A"
-                    bytes_sent = parts[6] if len(parts) > 6 else "N/A"
-                    connected_since = parts[7] if len(parts) > 7 else "N/A"
+            # First try to find the client in the routing table
+            if routing_table_section and line and "," not in line:
+                # Split the line by spaces for non-comma format
+                parts = line.split()
+                if len(parts) >= 2:
+                    virtual_address = parts[0]
+                    client_name = parts[1]
                     
-                    # Print client information
-                    print(f"Client: {common_name}")
-                    print(f"IP: {real_address.split(':')[0]}")
-                    print(f"Bytes Received: {bytes_received}")
-                    print(f"Bytes Sent: {bytes_sent}")
-                    print(f"Connected Since: {connected_since}")
-                    print("-" * 30)
+                    # Debug output
+                    print(f"Checking routing entry: {virtual_address} - {client_name}")
                     
                     # Check if this is our client
-                    if common_name == provision_identity:
-                        # Extract just the IP from the real address (format: IP:PORT)
-                        ip = real_address.split(':')[0]
-                        print(f"\nFound matching client {provision_identity} with IP: {ip}")
-                        return jsonify({"ip": ip}), 200
+                    if client_name == provision_identity:
+                        print(f"\nFound matching client {provision_identity} with Virtual IP: {virtual_address}")
+                        return jsonify({"ip": virtual_address}), 200
+            
+            # Then try the standard client list format
+            if client_section and line:
+                if "," in line:
+                    # Comma-separated format
+                    parts = line.split(',')
+                    if len(parts) >= 3:
+                        common_name = parts[1]
+                        real_address = parts[2]
                         
+                        # Debug output
+                        print(f"Checking client: {common_name}")
+                        
+                        if common_name == provision_identity:
+                            ip = real_address.split(':')[0]
+                            print(f"\nFound matching client {provision_identity} with IP: {ip}")
+                            return jsonify({"ip": ip}), 200
+                else:
+                    # Space-separated format
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        # This is a fallback to handle different formats
+                        # Try to match the client name in any position
+                        if provision_identity in line:
+                            for i, part in enumerate(parts):
+                                if part == provision_identity and i > 0:
+                                    potential_ip = parts[i-1]
+                                    if '.' in potential_ip:  # Basic IP validation
+                                        print(f"\nFound matching client {provision_identity} with IP: {potential_ip}")
+                                        return jsonify({"ip": potential_ip}), 200
+        
         print(f"\nNo client found with provision_identity: {provision_identity}")
         return jsonify({"error": "Client not connected"}), 404
         
     except Exception as e:
         print(f"Error reading status file: {str(e)}")
         return jsonify({"error": f"Error reading status file: {str(e)}"}), 500
-
 @app.route("/mikrotik/hotspot/<provision_identity>/<secret>/<form>")
 @require_secret
 def mtk_hostpot_ui(provision_identity, secret, form):
