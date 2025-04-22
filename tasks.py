@@ -26,7 +26,7 @@ celery.conf.update(
     broker_connection_max_retries=10
 )
 
-@celery.task(bind=True)
+@celery.task
 def generate_certificate(provision_identity):
     """Generate OpenVPN client certificate and configuration."""
     try:
