@@ -37,7 +37,6 @@ resolv-retry infinite
 nobind
 persist-key
 persist-tun
-remote-cert-tls server
 auth SHA256
 cipher AES-256-CBC
 data-ciphers AES-256-CBC

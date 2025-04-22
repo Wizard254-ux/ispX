@@ -162,37 +162,60 @@ def mtk_openvpn(provision_identity, secret):
 @app.route("/server/ip/")
 @require_secret
 def getIpAddress(provision_identity, secret):
-    """Returning the IP address of the client"""
+    """Get client IP from OpenVPN status log file"""
     try:
-        print(f"Getting IP for provision_identity: {provision_identity}")
-        # Get the status from OpenVPN
-        if v is None:
-            return jsonify({"error": "OpenVPN management interface not connected"}), 503
+        print(f"Getting IP for provision_identity: {provision_identity} from status file")
         
-        try:
-            status = v.get_status()
-            print('OpenVPN status:', status)
-        except Exception as e:
-            print(f"Error getting OpenVPN status: {str(e)}")
-            return jsonify({"error": "Failed to get OpenVPN status"}), 500
-
-        # Find the client by its common name (provision_identity)
-        if not hasattr(status, 'client_list'):
-            print("No client_list in status")
-            return jsonify({"error": "No clients connected"}), 404
-
-        for client in status.client_list:
-            print(f"Checking client: {client.common_name}")
-            if client.common_name == provision_identity:
-                print(f"Found client with IP: {client.real_address}")
-                return jsonify({"ip": client.real_address}), 200
+        # Common status file locations - try these in order
+        possible_paths = [
+            "/etc/openvpn/openvpn-status.log",
+            "/var/log/openvpn/openvpn-status.log",
+            "/var/log/openvpn-status.log",
+            "/etc/openvpn/server/openvpn-status.log"
+        ]
+        
+        status_file = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                status_file = path
+                print(f"Found OpenVPN status file at: {path}")
+                break
                 
+        if not status_file:
+            print("OpenVPN status file not found")
+            return jsonify({"error": "OpenVPN status file not found"}), 404
+            
+        # Read and parse the status file
+        with open(status_file, 'r') as f:
+            lines = f.readlines()
+        
+        print(f"Read {len(lines)} lines from status file")
+        
+        # Find client section and look for our client
+        client_section = False
+        for line in lines:
+            line = line.strip()
+            
+            # Different status file formats exist
+            if "Common Name,Real Address" in line or line == "ROUTING TABLE" or line.startswith("CLIENT LIST"):
+                client_section = True
+                print(f"Found client section marker: {line}")
+                continue
+                
+            if client_section and provision_identity in line:
+                print(f"Found matching client line: {line}")
+                parts = line.split(',')
+                if len(parts) >= 2:
+                    ip_with_port = parts[1]  # Format is usually "IP:PORT"
+                    ip = ip_with_port.split(':')[0]  # Extract just the IP
+                    print(f"Extracted IP: {ip}")
+                    return jsonify({"ip": ip}), 200
+        
         print(f"No client found with provision_identity: {provision_identity}")
         return jsonify({"error": "Client not connected"}), 404
     except Exception as e:
-        print(f"Unexpected error: {str(e)}")
-        return jsonify({"error": "Internal server error"}), 500
-
+        print(f"Error reading status file: {str(e)}")
+        return jsonify({"error": f"Error reading status file: {str(e)}"}), 500
 
 @app.route("/mikrotik/hotspot/<provision_identity>/<secret>/<form>")
 @require_secret

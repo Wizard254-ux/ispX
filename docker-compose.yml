@@ -53,6 +53,7 @@ services:
       - .:/app
       - /etc/openvpn:/etc/openvpn  # Mount the entire host OpenVPN directory
       - hotspot_templates:/var/www/templates
+      
     networks:
       - app-network
     
