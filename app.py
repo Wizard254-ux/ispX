@@ -34,11 +34,6 @@ except Exception as e:
     print(f"Using host: {Config.VPN_HOST}, port: {Config.VPN_PORT}")
     print(f"Exception type: {type(e).__name__}")
     v = None  # Set to None so we can check later
-@app.route('/')
-def hello_world():
-    # REQUEST_COUNT.labels(method='GET', endpoint='/', status='401').inc()
-    return jsonify({"status": "unauthorized"}), 401
-
 
 @app.route('/mikrotik/openvpn/create_provision/<provision_identity>', methods=["POST"])
 def mtk_create_new_provision(provision_identity):
