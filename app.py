@@ -21,15 +21,18 @@ app.config.from_object(Config)
 
 # Initialize OpenVPN API
 try:
+    print(f"Attempting to connect to OpenVPN management at {Config.VPN_HOST}:{Config.VPN_PORT}")
     v = openvpn_api.VPN(Config.VPN_HOST, Config.VPN_PORT)
     # Test connection
-    _ = v.get_status()
+    status = v.get_status()
     print(f"Successfully connected to OpenVPN management at {Config.VPN_HOST}:{Config.VPN_PORT}")
+    print(f"OpenVPN server version: {status.version}")
+    print(f"Connected clients: {len(status.client_list) if hasattr(status, 'client_list') else 0}")
 except Exception as e:
     print(f"WARNING: Failed to connect to OpenVPN management interface: {str(e)}")
     print(f"Using host: {Config.VPN_HOST}, port: {Config.VPN_PORT}")
+    print(f"Exception type: {type(e).__name__}")
     v = None  # Set to None so we can check later
-
 @app.route('/')
 def hello_world():
     # REQUEST_COUNT.labels(method='GET', endpoint='/', status='401').inc()
