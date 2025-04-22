@@ -44,7 +44,7 @@ def generate_certificate(provision_identity):
         # Generate the client certificate and key
         subprocess.run([
             easyrsa_path, 
-            "--pki-dir=/etc/openvpn/easy-rsa/pki",
+            # "--pki-dir=/etc/openvpn/easy-rsa/pki",
             "build-client-full", 
             provision_identity, 
             "nopass"
