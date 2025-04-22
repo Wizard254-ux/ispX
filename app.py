@@ -80,6 +80,7 @@ def get_task_status(task_id):
     if task_result.ready():
         if task_result.successful():
             result = task_result.get()
+            print('resultsss ',result)
             if result['status'] == 'success':
                 return jsonify({
                     "status": "success",
