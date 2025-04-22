@@ -15,6 +15,7 @@ from tasks import generate_certificate,celery
 from werkzeug.urls import url_quote
 import redis
 import json
+from main import admin_routs
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -33,11 +34,6 @@ except Exception as e:
     print(f"Using host: {Config.VPN_HOST}, port: {Config.VPN_PORT}")
     print(f"Exception type: {type(e).__name__}")
     v = None  # Set to None so we can check later
-@app.route('/')
-def hello_world():
-    # REQUEST_COUNT.labels(method='GET', endpoint='/', status='401').inc()
-    return jsonify({"status": "unauthorized"}), 401
-
 
 @app.route('/mikrotik/openvpn/create_provision/<provision_identity>', methods=["POST"])
 def mtk_create_new_provision(provision_identity):
@@ -46,9 +42,6 @@ def mtk_create_new_provision(provision_identity):
     """
     # with REQUEST_LATENCY.labels(endpoint='/create_provision').time():
     try:
-        # Validate provision identity
-        # validate_provision_identity(provision_identity)
-
         # Check if client already exists
         client_conf_path = f"{Config.VPN_CLIENT_DIR}/{provision_identity}.ovpn"
         if os.path.exists(client_conf_path):
@@ -278,6 +271,7 @@ def mtk_hostpot_ui(provision_identity, secret, form):
     except Exception as e:
         return jsonify({"error": "Internal server error"}), 500
 
+admin_routs.init(app)
 
 if __name__ == '__main__':
     app.run(debug=False)  # Set debug=False in production
