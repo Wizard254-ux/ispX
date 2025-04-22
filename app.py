@@ -164,55 +164,46 @@ def mtk_openvpn(provision_identity, secret):
 def getIpAddress(provision_identity, secret):
     """Get client IP from OpenVPN status log file"""
     try:
-        print(f"Getting IP for provision_identity: {provision_identity} from status file")
+        print(f"Getting IP for provision_identity: {provision_identity}")
         
-        # Common status file locations - try these in order
-        possible_paths = [
-            "/etc/openvpn/openvpn-status.log",
-            "/var/log/openvpn/openvpn-status.log",
-            "/var/log/openvpn-status.log",
-            "/etc/openvpn/server/openvpn-status.log"
-        ]
+        # Path to the OpenVPN status log file
+        status_file = "/var/log/openvpn/openvpn-status.log"
         
-        status_file = None
-        for path in possible_paths:
-            if os.path.exists(path):
-                status_file = path
-                print(f"Found OpenVPN status file at: {path}")
-                break
-                
-        if not status_file:
-            print("OpenVPN status file not found")
+        if not os.path.exists(status_file):
+            print(f"OpenVPN status file not found at {status_file}")
             return jsonify({"error": "OpenVPN status file not found"}), 404
             
         # Read and parse the status file
         with open(status_file, 'r') as f:
             lines = f.readlines()
-        
-        print(f"Read {len(lines)} lines from status file")
-        
-        # Find client section and look for our client
+            
+        # Find the client section and look for our client
         client_section = False
         for line in lines:
             line = line.strip()
             
-            # Different status file formats exist
-            if "Common Name,Real Address" in line or line == "ROUTING TABLE" or line.startswith("CLIENT LIST"):
+            # Check if we're in the client list section
+            if "CLIENT_LIST" in line:
                 client_section = True
-                print(f"Found client section marker: {line}")
                 continue
                 
-            if client_section and provision_identity in line:
-                print(f"Found matching client line: {line}")
+            if client_section and line:
+                # Split the line by commas
                 parts = line.split(',')
-                if len(parts) >= 2:
-                    ip_with_port = parts[1]  # Format is usually "IP:PORT"
-                    ip = ip_with_port.split(':')[0]  # Extract just the IP
-                    print(f"Extracted IP: {ip}")
-                    return jsonify({"ip": ip}), 200
-        
+                if len(parts) >= 3:  # Ensure we have at least Common Name and Real Address
+                    common_name = parts[1]
+                    real_address = parts[2]
+                    
+                    # Check if this is our client
+                    if common_name == provision_identity:
+                        # Extract just the IP from the real address (format: IP:PORT)
+                        ip = real_address.split(':')[0]
+                        print(f"Found client {provision_identity} with IP: {ip}")
+                        return jsonify({"ip": ip}), 200
+                        
         print(f"No client found with provision_identity: {provision_identity}")
         return jsonify({"error": "Client not connected"}), 404
+        
     except Exception as e:
         print(f"Error reading status file: {str(e)}")
         return jsonify({"error": f"Error reading status file: {str(e)}"}), 500

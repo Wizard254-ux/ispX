@@ -20,6 +20,7 @@ services:
     volumes:
       - .:/app
       - /etc/openvpn:/etc/openvpn  # Mount the entire host OpenVPN directory
+      - /var/log/openvpn/openvpn-status.log:/var/log/openvpn/openvpn-status.log  # Mount the OpenVPN status log
       - hotspot_templates:/var/www/templates
     networks:
       - app-network
