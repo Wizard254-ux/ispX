@@ -77,7 +77,7 @@ def get_task_status(task_id):
     """Get the status of a certificate generation task."""
     task_result = AsyncResult(task_id,app=celery)
 
-    print('resultsss ',task_result)
+    print(f'Task ID: {task_id}, State: {task_result.state}, Ready: {task_result.ready()}, Success: {task_result.successful() if task_result.ready() else "N/A"}')
     if task_result.ready():
         if task_result.successful():
             result = task_result.get()
