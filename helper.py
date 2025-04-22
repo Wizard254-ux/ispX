@@ -8,12 +8,15 @@ def generate_openvpn_config(provision_identity, output_path):
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         
         # Create OpenVPN configuration using system certificates
-        ca_path = "/etc/openvpn/easy-rsa/pki/ca.crt"
-        cert_path = f"/etc/openvpn/easy-rsa/pki/issued/{provision_identity}.crt"
-        key_path = f"/etc/openvpn/easy-rsa/pki/private/{provision_identity}.key"
+        common = "/etc/openvpn/server/client-common.txt"
+        ca_path = "/etc/openvpn/server/easy-rsa/pki/ca.crt"
+        cert_path = f"/etc/openvpn/server/easy-rsa/pki/issued/{provision_identity}.crt"
+        key_path = f"/etc/openvpn/server/easy-rsa/pki/private/{provision_identity}.key"
         
         # Read certificate files
         try:
+            with open(common, 'r') as f:
+                common_content = f.read().strip()
             with open(ca_path, 'r') as f:
                 ca_content = f.read().strip()
             
@@ -29,23 +32,7 @@ def generate_openvpn_config(provision_identity, output_path):
             key_content = subprocess.check_output(['cat', key_path]).decode('utf-8').strip()
         
         # Create OpenVPN configuration
-        config = f"""client
-dev tun
-proto tcp
-remote 35.226.234.138 {Config.VPN_PORT}
-resolv-retry infinite
-remote-cert-tls server
-nobind
-persist-key
-persist-tun
-auth SHA256
-cipher AES-256-CBC
-data-ciphers AES-256-CBC
-data-ciphers-fallback AES-256-CBC
-verb 3
-tls-client
-
-
+        config = f"""{common_content}
 <ca>
 {ca_content}
 </ca>
