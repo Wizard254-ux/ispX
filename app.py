@@ -151,7 +151,6 @@ def get_task_status(task_id):
 def mtk_openvpn(provision_identity,secret):
     """Returning openVPN client of a given provision_identity"""
     try:
-        provision_identity = request.args.get("provision_identity")
         path = f"{Config.VPN_CLIENT_DIR}/{provision_identity}.ovpn"
         if not os.path.exists(path):
             return jsonify({"error": "Configuration not found"}), 404
