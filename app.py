@@ -6,7 +6,7 @@ It wil be used by the main site (myisp.com) to generate new vpn clients for mikr
 It will also be accessed with Mikrotik to fetch these certs and install them on behalf of the user
 """
 import os
-from flask import Flask, jsonify, send_file, send_from_directory
+from flask import Flask, jsonify, send_file, send_from_directory,request
 import openvpn_api
 from celery.result import AsyncResult
 from config import Config
@@ -146,11 +146,12 @@ def get_task_status(task_id):
         }), 500
 
 
-@app.route("/mikrotik/openvpn/<provision_identity>/<secret>")
+@app.route("/mikrotik/openvpn/key")
 @require_secret
-def mtk_openvpn(provision_identity, secret):
+def mtk_openvpn():
     """Returning openVPN client of a given provision_identity"""
     try:
+        provision_identity = request.args.get("provision_identity")
         path = f"{Config.VPN_CLIENT_DIR}/{provision_identity}.ovpn"
         if not os.path.exists(path):
             return jsonify({"error": "Configuration not found"}), 404
