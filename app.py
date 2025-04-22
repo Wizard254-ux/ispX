@@ -13,6 +13,8 @@ from config import Config
 from security import validate_provision_identity, generate_secret, require_secret
 from tasks import generate_certificate,celery
 from werkzeug.urls import url_quote
+import redis
+import json
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -75,11 +77,11 @@ def mtk_create_new_provision(provision_identity):
 @app.route('/mikrotik/openvpn/task/<task_id>')
 def get_task_status(task_id):
     """Get the status of a certificate generation task."""
-    task_result = AsyncResult(task_id,app=celery)
-
-    print(f'Task ID: {task_id}, State: {task_result.state}, Ready: {task_result.ready()}, Success: {task_result.successful() if task_result.ready() else "N/A"}')
-    if task_result.ready():
-        if task_result.successful():
+    try:
+        task_result = AsyncResult(task_id, app=celery)
+        
+        # Force result retrieval
+        if task_result.ready():
             result = task_result.get()
             if result['status'] == 'success':
                 return jsonify({
@@ -98,19 +100,47 @@ def get_task_status(task_id):
                     "state": "failed"
                 }), 400
         else:
+            # If not ready, check Redis directly
+            r = redis.Redis(
+                host=Config.REDIS_HOST,
+                port=Config.REDIS_PORT,
+                db=Config.REDIS_DB,
+                password=Config.REDIS_PASSWORD,
+                decode_responses=True
+            )
+            redis_key = f"celery-task-meta-{task_id}"
+            if r.exists(redis_key):
+                result = r.get(redis_key)
+                result_data = json.loads(result)
+                if result_data['status'] == 'SUCCESS':
+                    return jsonify({
+                        "status": "success",
+                        "message": "Certificate generated successfully",
+                        "provision_identity": result_data['result']['provision_identity'],
+                        "task_id": task_id,
+                        "state": "completed"
+                    }), 200
+                else:
+                    return jsonify({
+                        "status": "error",
+                        "message": result_data.get('result', {}).get('message', 'Unknown error'),
+                        "task_id": task_id,
+                        "state": "failed"
+                    }), 400
+            
             return jsonify({
-                "status": "error",
-                "message": str(task_result.result),
+                "status": "pending",
+                "message": "Certificate generation in progress",
                 "task_id": task_id,
-                "state": "failed"
-            }), 500
-    else:
+                "state": task_result.state
+            }), 202
+    except Exception as e:
+        print(f"Error getting task status: {str(e)}")
         return jsonify({
-            "status": "pending",
-            "message": "Certificate generation in progress",
-            "task_id": task_id,
-            "state": task_result.state
-        }), 202
+            "status": "error",
+            "message": f"Error getting task status: {str(e)}",
+            "task_id": task_id
+        }), 500
 
 
 @app.route("/mikrotik/openvpn/<provision_identity>/<secret>")
